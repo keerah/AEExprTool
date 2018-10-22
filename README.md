@@ -20,8 +20,8 @@ names, and you have to do it manually.
 
 This is very early release and not all the features have been implemented yet:
 
-The working scope mode is "composition" only. 
-The search patterns are ignored.
-The code needs a total restructuring.
-The UI fully dockable but barely resizable.
-Tested on Windows. Mac support provided but not tested.
+The working scope mode is "composition" only.  
+The search patterns are ignored.  
+The code needs a total restructuring.  
+The UI fully dockable but barely resizable.  
+Tested on Windows. Mac support provided but not tested.  
