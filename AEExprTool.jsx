@@ -1,19 +1,21 @@
-﻿// AEexpTool.jsx
+﻿// AEExprTool.jsx
 // Copyright (c) 2018 Keerah, keerah.com. All rights reserved
 //
-// Name: AEexprTool
-// Version: 0.2
+// Name: AEExprTool
+// Version: 0.3
 //
 // Description:
 // Error correction control for After Effects expressions
-//
+// The tool gives you options to Add (Uncomment), Disable (Comment), ot Remove try{ } cath instuctions in expressions in bulk.
+// You can also modify the try-catch code and
+// define your own regexp patterns for the commenting/uncommenting match. (This custom regexp pattern not implemented yet)
 
 (function ExprTool(thisObj)
 {
     // Store globals in an object
     var ExprToolData = new Object();	
-	ExprToolData.scriptName = "AE Expression Tool";
-	ExprToolData.scriptTitle = ExprToolData.scriptName + " v0.2";
+	ExprToolData.scriptName = "AE Expressions Tool";
+	ExprToolData.scriptTitle = ExprToolData.scriptName + " v0.3";
     ExprToolData.strHelpText = 
 		"Copyright (c) 2018 Keerah. \n" +
 		"All rights reserved.\n" +
@@ -41,47 +43,49 @@
 
 	function ExprTool_buildUI(thisObj)
 	{
-		var pal = (thisObj instanceof Panel) ? thisObj : new Window("palette",ExprToolData.scriptName, undefined, {resizeable:true,}); //[0,0,100,410]
+		var pal = (thisObj instanceof Panel) ? thisObj : new Window("palette",ExprToolData.scriptName, undefined, {resizeable:true});
 		if (pal !== null)
 		{
 			// generating UI code
 			pal.spacing = 5;
             pal.margins = [3,5,3,3];
-			pal.orientation = "column";
-			ScopePanel = pal.add("panel", undefined, "SCOPE"); //[5,5,340,55]
+			pal.orientation = "column"; pal.alignChildren = ["fill","top"];
+			grp = pal.add("group", undefined); 
+			grp.orientation = "column"; grp.alignChildren = ["fill","top"];
+			ScopePanel = grp.add("panel", undefined, "SCOPE"); 
 			ScopePanel.margins = [5,10,5,5];
-			group_scope = ScopePanel.add("group", undefined); group_scope.orientation = "row";//[5,8,325,108]
-			rb_Comp = group_scope.add("radiobutton", undefined, "Composition"); rb_Comp.value = 1; rb_Comp.helpTip="Current composition only"; //[0,5,90,25]
-			rb_Layer = group_scope.add("radiobutton", undefined, "Layer"); rb_Layer.value = 0; rb_Layer.helpTip="Current layer only"; //[95,5,185,25]
-			rb_Property = group_scope.add("radiobutton", undefined, "Property"); rb_Property.value = 0; rb_Property.helpTip = "Current property only"; //[160,5,250,25]
+			ScopePanel.orientation = "row";  ScopePanel.alignChildren = ["fill","center"];
+			rb_Comp = ScopePanel.add("radiobutton", undefined, "Composition"); rb_Comp.value = 1; rb_Comp.helpTip="Current composition only"; 
+			rb_Layer = ScopePanel.add("radiobutton", undefined, "Layer"); rb_Layer.value = 0; rb_Layer.helpTip="Current layer only";
+			rb_Property = ScopePanel.add("radiobutton", undefined, "Property"); rb_Property.value = 0; rb_Property.helpTip = "Current property only";
 			
-			ErrCtrlPanel = pal.add("panel", undefined, "ERROR CONTROL");  //[5,60,100,405]
+			ErrCtrlPanel = grp.add("panel", undefined, "ERROR CONTROL");
 			ErrCtrlPanel.alignChildren = ["fill","top"]; ErrCtrlPanel.spacing = 10; ErrCtrlPanel.margins = [5,10,5,5];
-			group_open = ErrCtrlPanel.add("group"); //[5,10,325,100]
+			group_open = ErrCtrlPanel.add("group"); 
 			group_open.orientation = "column"; group_open.alignChildren = ["fill","top"]; group_open.spacing = 2;
-			openText = group_open.add("statictext", undefined, "Error control open code"); //[0,0,300,20]
-			openTextField = group_open.add("edittext", undefined, ExprToolData.openCode, {readonly:0,noecho:0,borderless:0,multiline:1,enterKeySignalsOnChange:0}); //[0,20,100,80]
+			openText = group_open.add("statictext", undefined, "Error control open code"); 
+			openTextField = group_open.add("edittext", undefined, ExprToolData.openCode, {readonly:0,noecho:0,borderless:0,multiline:1,enterKeySignalsOnChange:0});
 			openTextField.onChange = function()
 			{
 				if (openTextField.text == "") openTextField.text = ExprToolData.openCode;
 			}
-			openSearchText = group_open.add("statictext",undefined ,"RegExp search pattern for open code"); //[0,55,90,135]
-			openSearchField = group_open.add("edittext",undefined , ExprToolData.openSearchStr, {readonly:0,noecho:0,borderless:0,multiline:0,enterKeySignalsOnChange:0}); //[0,103,320,123]
+			openSearchText = group_open.add("statictext",undefined ,"RegExp search pattern for open code");
+			openSearchField = group_open.add("edittext",undefined , ExprToolData.openSearchStr, {readonly:0,noecho:0,borderless:0,multiline:0,enterKeySignalsOnChange:0}); 
 			openSearchField.onChange = function()
 			{
 				if (openTextField.text == "") openTextField.text = ExprToolData.openSearchStr;
 			}
 
-			group_close = ErrCtrlPanel.add("group"); //[5,140,325,150]
+			group_close = ErrCtrlPanel.add("group");
 			group_close.orientation = "column"; group_close.alignChildren = ["fill","top"]; group_close.spacing = 2; 
-			closeText = group_close.add("statictext", undefined, "Error control close code"); //[0,0,290,20]
-			closeTextField = group_close.add("edittext", undefined, ExprToolData.closeCode,{readonly:0,noecho:0,borderless:0,multiline:1,enterKeySignalsOnChange:0}); //[0,20,100,80]
+			closeText = group_close.add("statictext", undefined, "Error control close code");
+			closeTextField = group_close.add("edittext", undefined, ExprToolData.closeCode,{readonly:0,noecho:0,borderless:0,multiline:1,enterKeySignalsOnChange:0}); 
 			closeTextField.onChange = function()
 			{
 				if (closeTextField.text == "") closeTextField.text = ExprToolData.closeCode;
 			}
-			closeSearchText = group_close.add("statictext", undefined ,"RegExp search pattern for close code"); //[0,85,290,105]
-			closeSearchField = group_close.add("edittext", undefined, ExprToolData.closeSearchStr, {readonly:0,noecho:0,borderless:0,multiline:0,enterKeySignalsOnChange:0}); //[0,103,325,123]
+			closeSearchText = group_close.add("statictext", undefined ,"RegExp search pattern for close code");
+			closeSearchField = group_close.add("edittext", undefined, ExprToolData.closeSearchStr, {readonly:0,noecho:0,borderless:0,multiline:0,enterKeySignalsOnChange:0}); 
 			closeSearchField.onChange = function()
 			{
 				if (closeTextField.text == "") closeTextField.text = ExprToolData.closeSearchStr;
@@ -89,23 +93,23 @@
 
 			group_buttons = ErrCtrlPanel.add("group"); //[5,270,330,10]
 			group_buttons.alignChildren = ["fill","top"]; group_buttons.margins = [5,10,5,10];
-			enableButton = group_buttons.add("button", undefined, "Enable/Add"); enableButton.helpTip = "Add the EC code or uncomment it if present"; //[0,5,105,35]
+			enableButton = group_buttons.add("button", undefined, "Enable/Add"); enableButton.helpTip = "Add the EC code or uncomment it if present";
 			enableButton.onClick = function()
 			{
 				 ExprTool_Run(actionEnable);
 			}
-			disableButton = group_buttons.add("button", undefined,"Disable"); disableButton.helpTip = "Comment EC code"; //[110,5,210,35]
+			disableButton = group_buttons.add("button", undefined,"Disable"); disableButton.helpTip = "Comment EC code";
 			disableButton.onClick = function()
 			{
 				ExprTool_Run(actionDisable);
 			}
-			removeButton = group_buttons.add("button", undefined,"Remove");	removeButton.helpTip = "Remove EC code"; // [215,5,320,35]
+			removeButton = group_buttons.add("button", undefined,"Remove");	removeButton.helpTip = "Remove EC code"; 
 			removeButton.onClick = function()
 			{
 				ExprTool_Run(actionRemove);
 			}
 
-			checkIndent = ErrCtrlPanel.add("checkbox", undefined, "Adjust Indentation"); checkIndent.value = ExprToolData.Indent; //[0,45,150,65]
+			checkIndent = ErrCtrlPanel.add("checkbox", undefined, "Adjust Indentation"); checkIndent.value = ExprToolData.Indent;
 			// end of generating UI code
 			
 			pal.layout.layout(true);
@@ -126,7 +130,7 @@
 			if (((prop.propertyType === PropertyType.PROPERTY) && (prop.expression !== "") && prop.canSetExpression))
 			{
 				curExpression = prop.expression.replace(/(\r\n)+\s*$/gi,"");  //trim end
-				curExpression = curExpression.replace(/^\s*(\r\n)+/gi, "");       // trim start
+				curExpression = curExpression.replace(/^\s*(\r\n)+/gi, "");   // trim start
 				// if commented EC open present
 				if (curExpression.match(/\/+\s*try\s*(\r\n)?\{\s*/gi) !== null) 
 				{
