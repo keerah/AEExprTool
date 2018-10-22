@@ -16,6 +16,10 @@ When you have lots of error controlled expressions within #AfterEffects project 
 difficult to test/change things. Moreover when inside **"try {} catch"** #AE stops tracking the properties
 names, and you have to do it manually.
 
+## How
+
+You can use it as any other script or put it into **Support Files\Script\ScriptUI** Panels to use it as a docable panel.
+
 ## When
 
 This is very early release and not all the features have been implemented yet:
