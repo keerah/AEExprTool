@@ -18,7 +18,7 @@ names, and you have to do it manually.
 
 ## How
 
-You can use it as any other script or put it into **Support Files\Script\ScriptUI** Panels to use it as a docable panel.
+You can run it as any other script or put it into **Support Files\Script\ScriptUI Panels** to use it as a docable panel.
 
 ## When
 
